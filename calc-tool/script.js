@@ -17,3 +17,40 @@ const rawExpenses = [
 ];
 
 console.table(rawExpenses);
+
+// ===== 第二步：清洗 → 计算（每个函数只做一件事）=====
+
+// 清洗：只保留类别为非空字符串、金额为非负有限数字的合法记录（filter）
+const cleanExpenses = (list) => list.filter((record) =>
+  typeof record.category === 'string'
+  && record.category.trim() !== ''
+  && typeof record.amount === 'number'
+  && Number.isFinite(record.amount)
+  && record.amount >= 0
+);
+
+// 计算总支出：对金额累加（reduce）
+const calcTotal = (list) => list.reduce((sum, record) => sum + record.amount, 0);
+
+// 按类别汇总支出：聚合成 { 类别: 金额 } 对象（reduce）
+const sumByCategory = (list) => list.reduce((result, record) => {
+  const previous = result[record.category] ?? 0; // 该类别首次出现时从 0 起算
+  result[record.category] = previous + record.amount;
+  return result;
+}, {});
+
+// 筛选超过指定阈值的大额消费（filter）
+const findOverBudget = (list, limit) => list.filter((record) => record.amount > limit);
+
+// 把记录映射成一行可读文本（map）
+const toLines = (list) => list.map((record) =>
+  `${record.date} ${record.category}《${record.item}》：${record.amount.toFixed(2)} 元`
+);
+
+// 中间结果先打印确认，再进入下一步组装
+const validExpenses = cleanExpenses(rawExpenses);
+console.log('清洗后记录：', validExpenses);
+console.log('总支出：', calcTotal(validExpenses).toFixed(2), '元');
+console.log('分类汇总：', sumByCategory(validExpenses));
+console.log('大额消费（>30 元）：', findOverBudget(validExpenses, 30));
+console.log('消费明细行：', toLines(validExpenses));
